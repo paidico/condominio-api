@@ -1,4 +1,4 @@
-// setup
+// bootstrap setup
 // ####################
 
 // packages
@@ -7,51 +7,24 @@ var app = express();
 var bodyParser = require('body-parser');
 
 // persistência
+var configDB = require('./config/database');
 var mongoose = require('mongoose');
-mongoose.connect('localhost:27017/condominio');
-
-// modelo
-var Usuario = require('./app/models/usuario');
-var Erro = require('./app/models/erro');
-
-// utils
-var utils = require('.app/utils');
+mongoose.connect(configDB.url);
 
 // body-parser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// port
+// porta
 var port = process.env.PORT || 8086;
 
-// express Router
-var router = express.Router();
-
-// route GET /
-router.get('/', function(req, res) {
-    res.json({ message: 'API de Condomínio funcionando' });
-});
-
-// routes /usuarios
-router.route('/usuarios')
-
-    .post(function(req, res) {
-	// POST /api/usuarios
-
-	var usuario = new Usuario();
-	utils.objetoExtends(usuario, req.body.usuario);
-	usuario.save(function(err) {
-	    var resposta = { msg: 'Usuário criado com sucesso.' };
-	    if(err) {
-		resposta = new Erro('PERSIST_USUARIO');
-	    }
-	    res.json(resposta);
-	});
-    });
-
-// registro de rotas
-// ####################
-app.use('/api', router);
+// rotas
+require('./app/routes')(
+    app, 
+    express.Router(),
+    require('./app/models/usuario'), 
+    require('./app/models/erro'), 
+    require('./app/utils'));
 
 // start do server
 // ####################
