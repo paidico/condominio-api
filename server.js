@@ -29,6 +29,7 @@ require('./app/routes')(
     app, 
     express.Router(),
     require('./app/models/usuario'), 
+    require('./app/models/morador'), 
     require('./app/models/erro'), 
     require('./app/utils'));
 

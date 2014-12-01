@@ -1,12 +1,54 @@
 var uuid = require('node-uuid');
 
-module.exports = function(app, router, Usuario, Erro, utils) {
+module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 
     router.get('/', function(req, res) {
 	// GET /
 
 	res.json({ message: 'API de Condomínio no ar.' });
     });
+
+    // routes /moradores
+    router.route('/moradores')
+    // .post(function(req, res) {
+    //     // POST /api/moradores
+
+    
+    // })
+	.get(function(req, res) {
+	    // GET /api/moradores
+
+	    // autenticação
+	    var chave = utils.extractKey(req.headers);
+	    if(!chave) {
+		res.json(new Erro('ERR_AUTEN'));
+		return;
+	    }
+	    Usuario.where('chave.expiracao').gt(Date.now())
+		.findOne({ 
+		    'username': chave.usuario, 
+		    'chave.codigo': chave.codigo
+		}, function(err, user) {
+		    if(err || !user) {
+			res.json(new Erro('ERR_AUTEN'));
+			return;
+		    }
+		    user.chave.expiracao = Date.now() + 1800000;
+		    user.save(function() {
+			Morador.find(function(err, moradores) {
+			    if(err) {
+				res.json(new Erro('ERR_GEMDR'));
+				return;
+			    } 
+			    res.json({
+				sucesso: true,
+				msg: 'Listagem realizada com sucesso.',
+				moradores: moradores
+			    });			    
+			});
+		    });
+		});
+	});
 
     // routes /login
     router.route('/login')
