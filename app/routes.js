@@ -77,8 +77,6 @@ module.exports = function(app, router, Usuario, Erro, utils) {
 		var usuario = new Usuario();
 		utils.objetoExtends(usuario, _usr);
 		usuario.password = usuario.geraHash(_usr.password);
-		usuario.tipo = _usr.password === 'admin' && _usr.username === 'admin' 
-		    ? 'ADM' : 'COMUM';
 		usuario.chave = {
 		    codigo: uuid.v1(),
 		    expiracao: Date.now() + 1800000

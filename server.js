@@ -19,6 +19,12 @@ app.use(bodyParser.json());
 var port = process.env.PORT || 8086;
 
 // rotas
+// ####################
+
+// teste
+app.use(express.static(__dirname + '/public'));
+
+// api
 require('./app/routes')(
     app, 
     express.Router(),
