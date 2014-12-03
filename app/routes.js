@@ -1,6 +1,29 @@
 var uuid = require('node-uuid');
 
 module.exports = function(app, router, Usuario, Morador, Erro, utils) {
+    var autenticar = function(req, res, autoriza, callback) {
+	var chave = utils.extractKey(req.headers);
+	if(!chave) {
+	    res.json(new Erro('ERR_AUTEN'));
+	    return;
+	}
+	Usuario.where('chave.expiracao').gt(Date.now())
+	    .findOne({ 
+		'username': chave.usuario, 
+		'chave.codigo': chave.codigo
+	    }, function(err, user) {
+		if(err || !user) {
+		    res.json(new Erro('ERR_AUTEN'));
+		    return;
+		}
+		if(autoriza && autoriza !== user.tipo) {
+		    res.json(new Erro('ERR_AUTOR'));
+		    return;
+		}
+		user.chave.expiracao = Date.now() + 1800000;
+		user.save(callback);
+	    });
+    };
 
     router.get('/', function(req, res) {
 	// GET /
@@ -10,45 +33,70 @@ module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 
     // routes /moradores
     router.route('/moradores')
-    // .post(function(req, res) {
-    //     // POST /api/moradores
+	.post(function(req, res) {
+            // POST /api/moradores
 
-    
-    // })
+	    var mdr = req.body.morador;
+	    if(!mdr) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    autenticar(req, res, 'ADM', function() {
+		var morador = new Morador();
+		objetoExtends(morador, mdr);
+		morador.save(function(err) {
+		    if(err) {
+			res.json(new Erro('ERR_GEMDR'));
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Criação realizada com sucesso.'
+		    });			   
+		});
+	    });
+	})
 	.get(function(req, res) {
 	    // GET /api/moradores
 
 	    // autenticação
-	    var chave = utils.extractKey(req.headers);
-	    if(!chave) {
-		res.json(new Erro('ERR_AUTEN'));
-		return;
-	    }
-	    Usuario.where('chave.expiracao').gt(Date.now())
-		.findOne({ 
-		    'username': chave.usuario, 
-		    'chave.codigo': chave.codigo
-		}, function(err, user) {
-		    if(err || !user) {
-			res.json(new Erro('ERR_AUTEN'));
+	    autenticar(req, res, null, function() {
+		Morador.find(function(err, moradores) {
+		    if(err) {
+			res.json(new Erro('ERR_LSMDR'));
+			return;
+		    } 
+		    res.json({
+			sucesso: true,
+			msg: 'Listagem realizada com sucesso.',
+			moradores: moradores
+		    });			    
+		});
+	    });
+	});
+
+    // routes /moradores/:morador_id
+    router.route('/moradores/:morador_id')
+	.delete(function(req, res) {
+	    // DELETE /api/moradores/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Morador.remove({ 
+		    _id: req.params.morador_id 
+		}, function(err, morador) {
+		    if(err) {
+			res.json(new Erro('ERR_REMDR'));
 			return;
 		    }
-		    user.chave.expiracao = Date.now() + 1800000;
-		    user.save(function() {
-			Morador.find(function(err, moradores) {
-			    if(err) {
-				res.json(new Erro('ERR_GEMDR'));
-				return;
-			    } 
-			    res.json({
-				sucesso: true,
-				msg: 'Listagem realizada com sucesso.',
-				moradores: moradores
-			    });			    
-			});
-		    });
+		    res.json({
+			sucesso: true,
+			msg: 'Exclusão realizada com sucesso.'
+		    });			    
 		});
-	});
+	    });
+	});	      
+
 
     // routes /login
     router.route('/login')
