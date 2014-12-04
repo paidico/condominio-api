@@ -43,7 +43,7 @@ module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 	    }
 	    autenticar(req, res, 'ADM', function() {
 		var morador = new Morador();
-		objetoExtends(morador, mdr);
+		utils.objetoExtends(morador, mdr);
 		morador.save(function(err) {
 		    if(err) {
 			res.json(new Erro('ERR_GEMDR'));
