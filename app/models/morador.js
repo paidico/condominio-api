@@ -13,6 +13,7 @@ var moradorSchema = new mongoose.Schema({
 	comercial: String,
     },
     email: String,
+    obs: String,
     foto: Buffer
 });
 
