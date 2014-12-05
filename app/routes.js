@@ -43,10 +43,13 @@ module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 	    }
 	    autenticar(req, res, 'ADM', function() {
 		var morador = new Morador();
+
 		utils.objetoExtends(morador, mdr);
 		morador.save(function(err) {
 		    if(err) {
-			res.json(new Erro('ERR_GEMDR'));
+			var _err = new Erro('ERR_GEMDR');
+			_err.stacktrace = err;
+			res.json(_err);
 			return;
 		    }
 		    res.json({
@@ -94,9 +97,33 @@ module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 			msg: 'Exclusão realizada com sucesso.'
 		    });			    
 		});
-	    });
-	});	      
+	    })
+	})
+	.put(function(req, res) {
+	    // PUT /api/moradores/id
 
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Morador.findById(req.params.morador_id, function(err, mdr) {
+		    if(err) {
+			res.json(new Erro('ERR_EDMDR'));
+			return;
+		    }
+		    utils.objetoExtends(mdr, req.body.morador);
+		    mdr.save(function(err) {
+			if(err) {
+			    res.json(new Erro('ERR_EDMDR'));
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Alteração realizada com sucesso.'
+			});			    
+		    });
+		});
+
+	    });	      
+	});
 
     // routes /login
     router.route('/login')

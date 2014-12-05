@@ -9,6 +9,7 @@ module.exports = function(erro) {
 	ERR_LSMDR: 'Falha ao listar moradores',
 	ERR_GEMDR: 'Falha ao incluir morador',
 	ERR_REMDR: 'Falha ao excluir morador',
+	ERR_EDMDR: 'Falha ao editar morador',
 	ERR_AUTEN: 'Falha de autenticação',
 	ERR_AUTOR: 'Falha de autorização'
     };
