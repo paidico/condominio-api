@@ -12,8 +12,8 @@ var mongoose = require('mongoose');
 mongoose.connect(configDB.url);
 
 // body-parser
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '7mb', extended: true }));
+app.use(bodyParser.json({ limit: '7mb' }));
 
 // porta
 var port = process.env.PORT || 8086;
@@ -21,7 +21,7 @@ var port = process.env.PORT || 8086;
 // rotas
 // ####################
 
-// teste
+// página de teste
 app.use(express.static(__dirname + '/public'));
 
 // api
