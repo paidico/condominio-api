@@ -78,6 +78,37 @@ module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 	    });
 	});
 
+    // routes /moradores/search
+    router.route('/moradores/search')
+	.post(function(req, res) {
+	    // POST /api/moradores/search
+
+	    var termo = req.body.termo;
+	    if(!termo) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Morador.find()
+		    .or([
+			{ 'nome': new RegExp('^.*(?=' + termo + ').*$') }, 
+			{ 'cpf': new RegExp('^' + termo) }
+		    ])
+		    .find(function(err, moradores) {
+			if(err) {
+			    res.json(new Erro('ERR_PSMDR'));
+			    return;
+			} 
+			res.json({
+			    sucesso: true,
+			    msg: 'Listagem realizada com sucesso.',
+			    moradores: moradores
+			});			    
+		    });
+	    });
+	});
+
     // routes /moradores/:morador_id
     router.route('/moradores/:morador_id')
 	.delete(function(req, res) {

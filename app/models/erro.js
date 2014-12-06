@@ -7,6 +7,7 @@ module.exports = function(erro) {
 	ERR_PARAM: 'Falha ao identificar parâmetros',
 	ERR_EXUSR: 'Usuário já existe',
 	ERR_LSMDR: 'Falha ao listar moradores',
+	ERR_PSMDR: 'Falha ao pesquisar moradores',
 	ERR_GEMDR: 'Falha ao incluir morador',
 	ERR_REMDR: 'Falha ao excluir morador',
 	ERR_EDMDR: 'Falha ao editar morador',
