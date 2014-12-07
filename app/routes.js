@@ -1,6 +1,12 @@
 var uuid = require('node-uuid');
 
-module.exports = function(app, router, Usuario, Morador, Erro, utils) {
+module.exports = function(app, 
+			  router, 
+			  Usuario, 
+			  Morador, 
+			  Funcionario, 
+			  Erro, 
+			  utils) {
     var autenticar = function(req, res, autoriza, callback) {
 	var chave = utils.extractKey(req.headers);
 	if(!chave) {
@@ -155,6 +161,132 @@ module.exports = function(app, router, Usuario, Morador, Erro, utils) {
 
 	    });	      
 	});
+
+    // routes /funcionarios
+    router.route('/funcionarios')
+	.post(function(req, res) {
+            // POST /api/funcionarios
+
+	    var fnc = req.body.funcionario;
+	    if(!fnc) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    autenticar(req, res, 'ADM', function() {
+		var funcionario = new Funcionario();
+
+		utils.objetoExtends(funcionario, fnc);
+		funcionario.save(function(err) {
+		    if(err) {
+			var _err = new Erro('ERR_GEFNC');
+			_err.stacktrace = err;
+			res.json(_err);
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Criação realizada com sucesso.'
+		    });			   
+		});
+	    });
+	})
+	.get(function(req, res) {
+	    // GET /api/funcionarios
+
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Funcionario.find(function(err, funcionarios) {
+		    if(err) {
+			res.json(new Erro('ERR_LSFNC'));
+			return;
+		    } 
+		    res.json({
+			sucesso: true,
+			msg: 'Listagem realizada com sucesso.',
+			funcionarios: funcionarios
+		    });			    
+		});
+	    });
+	});
+
+    // routes /funcionarios/search
+    router.route('/funcionarios/search')
+	.post(function(req, res) {
+	    // POST /api/funcionarios/search
+
+	    var termo = req.body.termo;
+	    if(!termo) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Funcionario.find()
+		    .or([
+			{ 'nome': new RegExp('^.*(?=' + termo + ').*$') }, 
+			{ 'cpf': new RegExp('^' + termo) }
+		    ])
+		    .find(function(err, funcionarios) {
+			if(err) {
+			    res.json(new Erro('ERR_PSFNC'));
+			    return;
+			} 
+			res.json({
+			    sucesso: true,
+			    msg: 'Listagem realizada com sucesso.',
+			    funcionarios: funcionarios
+			});			    
+		    });
+	    });
+	});
+
+    // routes /funcionarios/:funcionario_id
+    router.route('/funcionarios/:funcionario_id')
+	.delete(function(req, res) {
+	    // DELETE /api/funcionarios/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Funcionario.remove({ 
+		    _id: req.params.funcionario_id 
+		}, function(err, funcionario) {
+		    if(err) {
+			res.json(new Erro('ERR_REFNC'));
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Exclusão realizada com sucesso.'
+		    });			    
+		});
+	    })
+	})
+	.put(function(req, res) {
+	    // PUT /api/funcionarios/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Funcionario.findById(req.params.funcionario_id, function(err, fnc) {
+		    if(err) {
+			res.json(new Erro('ERR_EDFNC'));
+			return;
+		    }
+		    utils.objetoExtends(fnc, req.body.funcionario);
+		    fnc.save(function(err) {
+			if(err) {
+			    res.json(new Erro('ERR_EDFNC'));
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Alteração realizada com sucesso.'
+			});			    
+		    });
+		});
+
+	    });	      
+	});
+
 
     // routes /login
     router.route('/login')
