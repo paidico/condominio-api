@@ -5,6 +5,8 @@ module.exports = function(app,
 			  Usuario, 
 			  Morador, 
 			  Funcionario, 
+			  Autorizada,
+			  Reclamacao,
 			  Erro, 
 			  utils) {
     var autenticar = function(req, res, autoriza, callback) {
@@ -16,7 +18,8 @@ module.exports = function(app,
 	Usuario.where('chave.expiracao').gt(Date.now())
 	    .findOne({ 
 		'username': chave.usuario, 
-		'chave.codigo': chave.codigo
+		'chave.codigo': chave.codigo,
+		'ativo': true
 	    }, function(err, user) {
 		if(err || !user) {
 		    res.json(new Erro('ERR_AUTEN'));
@@ -162,6 +165,55 @@ module.exports = function(app,
 	    });	      
 	});
 
+    // routes /usuarios
+    router.route('/usuarios')
+	.get(function(req, res) {
+	    // GET /api/usuarios
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Usuario.find(function(err, usuarios) {
+		    if(err) {
+			res.json(new Erro('ERR_LSUSR'));
+			return;
+		    } 
+		    res.json({
+			sucesso: true,
+			msg: 'Listagem realizada com sucesso.',
+			usuarios: usuarios
+		    });			    
+		});
+	    });
+	});
+
+    // routes /usuarios/:usuario_id
+    router.route('/usuarios/:usuario_id')
+	.put(function(req, res) {
+	    // PUT /api/usuarios/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Usuario.findById(req.params.usuario_id, function(err, usr) {
+		    if(err) {
+			res.json(new Erro('ERR_EDUSR'));
+			return;
+		    }
+		    utils.objetoExtends(usr, req.body.usuario);
+		    usr.save(function(err) {
+			if(err) {
+			    res.json(new Erro('ERR_EDUSR'));
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Alteração realizada com sucesso.'
+			});			    
+		    });
+		});
+
+	    });	      
+	});
+
     // routes /funcionarios
     router.route('/funcionarios')
 	.post(function(req, res) {
@@ -193,8 +245,8 @@ module.exports = function(app,
 	.get(function(req, res) {
 	    // GET /api/funcionarios
 
-	    // autenticação
-	    autenticar(req, res, null, function() {
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
 		Funcionario.find(function(err, funcionarios) {
 		    if(err) {
 			res.json(new Erro('ERR_LSFNC'));
@@ -220,7 +272,7 @@ module.exports = function(app,
 		return;
 	    }
 	    // autenticação
-	    autenticar(req, res, null, function() {
+	    autenticar(req, res, 'ADM', function() {
 		Funcionario.find()
 		    .or([
 			{ 'nome': new RegExp('^.*(?=' + termo + ').*$') }, 
@@ -307,7 +359,7 @@ module.exports = function(app,
 		    res.json(new Erro('ERR_SGNIN'));
 		    return;
 		} 
-		if(user && user.validaPassword(_usr.password)) {
+		if(user && user.ativo && user.validaPassword(_usr.password)) {
 		    user.chave = {
 			codigo: uuid.v1(),
 			expiracao: Date.now() + 1800000
@@ -357,13 +409,12 @@ module.exports = function(app,
 		var usuario = new Usuario();
 		utils.objetoExtends(usuario, _usr);
 		usuario.password = usuario.geraHash(_usr.password);
-		usuario.chave = {
-		    codigo: uuid.v1(),
-		    expiracao: Date.now() + 1800000
-		};
+		usuario.chave = { };
+		usuario.ativo = false;
+
 		usuario.save(function(err) {
 		    var resposta = { 
-			msg: 'Usuário criado com sucesso.',
+			msg: 'Registro efetuado. Aguarde a aprovação de um administrador.',
 			sucesso: true,
 			usuario: {
 			    username: usuario.username,
@@ -378,6 +429,227 @@ module.exports = function(app,
 		});
 	    });
 	});
+
+    // routes /autorizadas
+    router.route('/autorizadas')
+	.post(function(req, res) {
+            // POST /api/autorizadas
+
+	    var atz = req.body.autorizada;
+	    if(!atz) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    autenticar(req, res, 'ADM', function() {
+		var autorizada = new Autorizada();
+
+		utils.objetoExtends(autorizada, atz);
+		autorizada.save(function(err) {
+		    if(err) {
+			var _err = new Erro('ERR_GEATZ');
+			_err.stacktrace = err;
+			res.json(_err);
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Criação realizada com sucesso.'
+		    });			   
+		});
+	    });
+	})
+	.get(function(req, res) {
+	    // GET /api/autorizadas
+
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Autorizada.find(function(err, autorizadas) {
+		    if(err) {
+			res.json(new Erro('ERR_LSATZ'));
+			return;
+		    } 
+		    res.json({
+			sucesso: true,
+			msg: 'Listagem realizada com sucesso.',
+			autorizadas: autorizadas
+		    });			    
+		});
+	    });
+	});
+
+    // routes /autorizadas/search
+    router.route('/autorizadas/search')
+	.post(function(req, res) {
+	    // POST /api/autorizadas/search
+
+	    var termo = req.body.termo;
+	    if(!termo) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Autorizada.find()
+		    .or([
+			{ 'nome': new RegExp('^.*(?=' + termo + ').*$') }, 
+			{ 'cpf': new RegExp('^' + termo) }
+		    ])
+		    .find(function(err, autorizadas) {
+			if(err) {
+			    res.json(new Erro('ERR_PSATZ'));
+			    return;
+			} 
+			res.json({
+			    sucesso: true,
+			    msg: 'Listagem realizada com sucesso.',
+			    autorizadas: autorizadas
+			});			    
+		    });
+	    });
+	});
+
+    // routes /autorizadas/:autorizada_id
+    router.route('/autorizadas/:autorizada_id')
+	.delete(function(req, res) {
+	    // DELETE /api/autorizadas/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Autorizada.remove({ 
+		    _id: req.params.autorizada_id 
+		}, function(err, autorizada) {
+		    if(err) {
+			res.json(new Erro('ERR_REATZ'));
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Exclusão realizada com sucesso.'
+		    });			    
+		});
+	    })
+	})
+	.put(function(req, res) {
+	    // PUT /api/autorizadas/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Autorizada.findById(req.params.autorizada_id, function(err, atz) {
+		    if(err) {
+			res.json(new Erro('ERR_EDATZ'));
+			return;
+		    }
+		    utils.objetoExtends(atz, req.body.autorizada);
+		    atz.save(function(err) {
+			if(err) {
+			    res.json(new Erro('ERR_EDATZ'));
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Alteração realizada com sucesso.'
+			});			    
+		    });
+		});
+
+	    });	      
+	});
+
+
+    // routes /reclamacoes
+    router.route('/reclamacoes')
+	.post(function(req, res) {
+            // POST /api/reclamacoes
+
+	    var atz = req.body.reclamacao;
+	    if(!atz) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    autenticar(req, res, 'ADM', function() {
+		var reclamacao = new Reclamacao();
+
+		utils.objetoExtends(reclamacao, atz);
+		reclamacao.save(function(err) {
+		    if(err) {
+			var _err = new Erro('ERR_GERCL');
+			_err.stacktrace = err;
+			res.json(_err);
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Criação realizada com sucesso.'
+		    });			   
+		});
+	    });
+	})
+	.get(function(req, res) {
+	    // GET /api/reclamacoes
+
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Reclamacao.find(function(err, reclamacoes) {
+		    if(err) {
+			res.json(new Erro('ERR_LSRCL'));
+			return;
+		    } 
+		    res.json({
+			sucesso: true,
+			msg: 'Listagem realizada com sucesso.',
+			reclamacoes: reclamacoes
+		    });			    
+		});
+	    });
+	});
+
+    // routes /reclamacoes/:reclamacao_id
+    router.route('/reclamacoes/:reclamacao_id')
+	.delete(function(req, res) {
+	    // DELETE /api/reclamacoes/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Reclamacao.remove({ 
+		    _id: req.params.reclamacao_id 
+		}, function(err, reclamacao) {
+		    if(err) {
+			res.json(new Erro('ERR_RERCL'));
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Exclusão realizada com sucesso.'
+		    });			    
+		});
+	    })
+	})
+	.put(function(req, res) {
+	    // PUT /api/reclamacoes/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Reclamacao.findById(req.params.reclamacao_id, function(err, atz) {
+		    if(err) {
+			res.json(new Erro('ERR_EDRCL'));
+			return;
+		    }
+		    utils.objetoExtends(atz, req.body.reclamacao);
+		    atz.save(function(err) {
+			if(err) {
+			    res.json(new Erro('ERR_EDRCL'));
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Alteração realizada com sucesso.'
+			});			    
+		    });
+		});
+
+	    });	      
+	});
+
 
     // registro de rotas
     // ####################

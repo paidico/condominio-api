@@ -1,9 +1,11 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
+var u = require('../utils');
 
 var usuarioSchema = mongoose.Schema({
-    username: String,
+    username: { type: String, unique: true, trim: true },
     password: String,
+    ativo: Boolean,
     chave: {
 	codigo: String,
 	expiracao: Number
@@ -19,4 +21,19 @@ usuarioSchema.methods.validaPassword = function(password) {
     return bcrypt.compareSync(password, this.password);
 };
 
-module.exports = mongoose.model('Usuario', usuarioSchema);
+var U = mongoose.model('Usuario', usuarioSchema);
+
+[{ 
+    username: 'chefe',
+    password: '1234',
+    ativo: true,
+    chave: { },
+    tipo: 'ADM'
+}].forEach(function(usr) {
+    var model = new U();
+    u.objetoExtends(model, usr);
+    model.password = model.geraHash(usr.password);
+    model.save();
+});
+
+module.exports = U;

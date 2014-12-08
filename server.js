@@ -31,6 +31,8 @@ require('./app/routes')(
     require('./app/models/usuario'), 
     require('./app/models/morador'), 
     require('./app/models/funcionario'), 
+    require('./app/models/autorizada'), 
+    require('./app/models/reclamacao'), 
     require('./app/models/erro'), 
     require('./app/utils'));
 
