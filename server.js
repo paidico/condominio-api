@@ -3,8 +3,10 @@
 
 // packages
 var express = require('express');
-var app = express();
 var bodyParser = require('body-parser');
+var cors = require('cors');
+
+var app = express();
 
 // persistência
 var configDB = require('./config/database');
@@ -21,8 +23,18 @@ var port = process.env.PORT || 8086;
 // rotas
 // ####################
 
+// cors com preflight
+var corsOpt = { 
+    credentials: true,
+    origin: true,
+    maxAge: 66,
+    methods: [ 'GET', 'POST', 'DELETE', 'PUT', 'OPTIONS', 'HEAD', 'PATCH' ]
+};
+app.use(cors(corsOpt));
+app.options('*', cors(corsOpt));
+
 // página de teste
-app.use(express.static(__dirname + '/public'));
+// app.use(express.static(__dirname + '/public'));
 
 // api
 require('./app/routes')(

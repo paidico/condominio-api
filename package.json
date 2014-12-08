@@ -30,6 +30,7 @@
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "latest",
+    "cors": "^2.5.2",
     "express": "latest",
     "mongoose": "latest",
     "node-uuid": "latest"

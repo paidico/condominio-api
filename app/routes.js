@@ -17,7 +17,7 @@ module.exports = function(app,
 	}
 	Usuario.where('chave.expiracao').gt(Date.now())
 	    .findOne({ 
-		'username': chave.usuario, 
+		'_id': chave.usuario, 
 		'chave.codigo': chave.codigo,
 		'ativo': true
 	    }, function(err, user) {
@@ -368,6 +368,7 @@ module.exports = function(app,
 			sucesso: true,
 			msg: 'Autenticação realizada com sucesso.',
 			usuario: {
+			    id: user._id,
 			    username: user.username,
 			    tipo: user.tipo,
 			    chave: user.chave
@@ -414,13 +415,8 @@ module.exports = function(app,
 
 		usuario.save(function(err) {
 		    var resposta = { 
-			msg: 'Registro efetuado. Aguarde a aprovação de um administrador.',
-			sucesso: true,
-			usuario: {
-			    username: usuario.username,
-			    tipo: usuario.tipo,
-			    chave: usuario.chave
-			}
+			msg: 'Cadastro efetuado. Aguarde a aprovação de um administrador.',
+			sucesso: true
 		    };
 		    if(err) {
 			resposta = new Erro('ERR_SGNUP');
