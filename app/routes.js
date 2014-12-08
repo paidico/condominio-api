@@ -73,7 +73,7 @@ module.exports = function(app,
 
 	    // autenticação
 	    autenticar(req, res, null, function() {
-		Morador.find(function(err, moradores) {
+		Morador.find().sort({ nome: 'asc' }).exec(function(err, moradores) {
 		    if(err) {
 			res.json(new Erro('ERR_LSMDR'));
 			return;
@@ -172,7 +172,7 @@ module.exports = function(app,
 
 	    // autenticação / autorização
 	    autenticar(req, res, 'ADM', function() {
-		Usuario.find(function(err, usuarios) {
+		Usuario.find().sort({ username: 1 }).exec(function(err, usuarios) {
 		    if(err) {
 			res.json(new Erro('ERR_LSUSR'));
 			return;
@@ -247,7 +247,7 @@ module.exports = function(app,
 
 	    // autenticação / autorização
 	    autenticar(req, res, 'ADM', function() {
-		Funcionario.find(function(err, funcionarios) {
+		Funcionario.find().sort({ nome: 1 }).exec(function(err, funcionarios) {
 		    if(err) {
 			res.json(new Erro('ERR_LSFNC'));
 			return;
@@ -339,6 +339,38 @@ module.exports = function(app,
 	    });	      
 	});
 
+
+    // routes /logout
+    router.route('/logout')
+	.post(function(req, res) {
+	    // POST /api/logout
+
+	    var _usr = req.body.usuario;
+	    if(!_usr) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    } 
+	    Usuario.findById(_usr.id, function(err, user) {
+
+		if(user) {
+		    user.chave = { 
+			codigo: null,
+			expiracao: 0
+		    };
+
+		    var resposta = {
+			sucesso: true,
+			msg: 'Logout realizado com sucesso.'
+		    };
+		    user.save(function() {
+			res.json(resposta);
+		    });
+		    return;
+		} 
+		res.json(new Erro('ERR_NOUSR'));
+	    })
+	    
+	});
 
     // routes /login
     router.route('/login')
@@ -459,7 +491,7 @@ module.exports = function(app,
 
 	    // autenticação
 	    autenticar(req, res, null, function() {
-		Autorizada.find(function(err, autorizadas) {
+		Autorizada.find().sort({ nome: 1 }).exec(function(err, autorizadas) {
 		    if(err) {
 			res.json(new Erro('ERR_LSATZ'));
 			return;
@@ -585,7 +617,7 @@ module.exports = function(app,
 
 	    // autenticação
 	    autenticar(req, res, null, function() {
-		Reclamacao.find(function(err, reclamacoes) {
+		Reclamacao.find().sort({ nome: 1 }).exec(function(err, reclamacoes){ 
 		    if(err) {
 			res.json(new Erro('ERR_LSRCL'));
 			return;
