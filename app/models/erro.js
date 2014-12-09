@@ -29,7 +29,12 @@ module.exports = function(erro) {
 	ERR_REFNC: 'Falha ao excluir funcionário.',
 	ERR_EDFNC: 'Falha ao editar funcionário.',
 	ERR_AUTEN: 'Falha de autenticação.',
-	ERR_AUTOR: 'Falha de autorização.'
+	ERR_AUTOR: 'Falha de autorização.',
+	ERR_LSOCR: 'Falha ao listar ocorrências.',
+	ERR_PSOCR: 'Falha ao pesquisar ocorrências.',
+	ERR_GEOCR: 'Falha ao incluir ocorrência.',
+	ERR_REOCR: 'Falha ao excluir ocorrência.',
+	ERR_EDOCR: 'Falha ao editar ocorrência.'
     };
 
     this.msg = enumerador[erro] || enumerador['ERR_DESCN'],

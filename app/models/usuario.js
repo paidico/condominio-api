@@ -24,7 +24,7 @@ usuarioSchema.methods.validaPassword = function(password) {
 var U = mongoose.model('Usuario', usuarioSchema);
 
 [{ 
-    username: 'chefe',
+    username: 'Chefe',
     password: '1234',
     ativo: true,
     chave: { },

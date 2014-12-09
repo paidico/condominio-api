@@ -45,6 +45,7 @@ require('./app/routes')(
     require('./app/models/funcionario'), 
     require('./app/models/autorizada'), 
     require('./app/models/reclamacao'), 
+    require('./app/models/ocorrencia'), 
     require('./app/models/erro'), 
     require('./app/utils'));
 

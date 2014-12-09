@@ -7,6 +7,7 @@ module.exports = function(app,
 			  Funcionario, 
 			  Autorizada,
 			  Reclamacao,
+			  Ocorrencia,
 			  Erro, 
 			  utils) {
     var autenticar = function(req, res, autoriza, callback) {
@@ -585,21 +586,20 @@ module.exports = function(app,
 	    });	      
 	});
 
-
     // routes /reclamacoes
     router.route('/reclamacoes')
 	.post(function(req, res) {
             // POST /api/reclamacoes
 
-	    var atz = req.body.reclamacao;
-	    if(!atz) {
+	    var rcl = req.body.reclamacao;
+	    if(!rcl) {
 		res.json(new Erro('ERR_PARAM'));
 		return;
 	    }
 	    autenticar(req, res, 'ADM', function() {
 		var reclamacao = new Reclamacao();
 
-		utils.objetoExtends(reclamacao, atz);
+		utils.objetoExtends(reclamacao, rcl);
 		reclamacao.save(function(err) {
 		    if(err) {
 			var _err = new Erro('ERR_GERCL');
@@ -659,13 +659,13 @@ module.exports = function(app,
 
 	    // autenticação / autorização
 	    autenticar(req, res, 'ADM', function() {
-		Reclamacao.findById(req.params.reclamacao_id, function(err, atz) {
+		Reclamacao.findById(req.params.reclamacao_id, function(err, rcl) {
 		    if(err) {
 			res.json(new Erro('ERR_EDRCL'));
 			return;
 		    }
-		    utils.objetoExtends(atz, req.body.reclamacao);
-		    atz.save(function(err) {
+		    utils.objetoExtends(rcl, req.body.reclamacao);
+		    rcl.save(function(err) {
 			if(err) {
 			    res.json(new Erro('ERR_EDRCL'));
 			    return;
@@ -680,6 +680,109 @@ module.exports = function(app,
 	    });	      
 	});
 
+    // routes /ocorrencias
+    router.route('/ocorrencias')
+	.post(function(req, res) {
+            // POST /api/ocorrencias
+
+	    var ocr = req.body.ocorrencia;
+	    if(!ocr) {
+		res.json(new Erro('ERR_PARAM'));
+		return;
+	    }
+	    autenticar(req, res, 'ADM', function() {
+		var ocorrencia = new Ocorrencia();
+
+		utils.objetoExtends(ocorrencia, ocr);
+		Funcionario.findById(ocr._funcionario, function(err, _fnc) {
+		    if(err || !_fnc) {
+			res.json(new Erro('ERR_GEOCR'));
+			return;
+		    }
+
+		    ocorrencia.save(function(err) {
+			if(err) {
+			    var _err = new Erro('ERR_GEOCR');
+			    _err.stacktrace = err;
+			    res.json(_err);
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Criação realizada com sucesso.'
+			});			   
+		    });
+		});
+	    });
+	})
+	.get(function(req, res) {
+	    // GET /api/ocorrencias
+
+	    // autenticação
+	    autenticar(req, res, null, function() {
+		Ocorrencia.find()
+		    .sort({ nome: 1 })
+		    .populate('_funcionario', 'nome')
+		    .exec(function(err, ocorrencias) { 
+			if(err) {
+			    res.json(new Erro('ERR_LSOCR'));
+			    return;
+			} 
+			res.json({
+			    sucesso: true,
+			    msg: 'Listagem realizada com sucesso.',
+			    ocorrencias: ocorrencias
+			});			    
+		    });
+	    });
+	});
+
+    // routes /ocorrencias/:ocorrencia_id
+    router.route('/ocorrencias/:ocorrencia_id')
+	.delete(function(req, res) {
+	    // DELETE /api/ocorrencias/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Ocorrencia.remove({ 
+		    _id: req.params.ocorrencia_id 
+		}, function(err, ocorrencia) {
+		    if(err) {
+			res.json(new Erro('ERR_REOCR'));
+			return;
+		    }
+		    res.json({
+			sucesso: true,
+			msg: 'Exclusão realizada com sucesso.'
+		    });			    
+		});
+	    })
+	})
+	.put(function(req, res) {
+	    // PUT /api/ocorrencias/id
+
+	    // autenticação / autorização
+	    autenticar(req, res, 'ADM', function() {
+		Ocorrencia.findById(req.params.ocorrencia_id, function(err, ocr) {
+		    if(err) {
+			res.json(new Erro('ERR_EDOCR'));
+			return;
+		    }
+		    utils.objetoExtends(ocr, req.body.ocorrencia);
+		    ocr.save(function(err) {
+			if(err) {
+			    res.json(new Erro('ERR_EDOCR'));
+			    return;
+			}
+			res.json({
+			    sucesso: true,
+			    msg: 'Alteração realizada com sucesso.'
+			});			    
+		    });
+		});
+
+	    });	      
+	});
 
     // registro de rotas
     // ####################

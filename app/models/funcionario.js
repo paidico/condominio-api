@@ -1,7 +1,9 @@
 var mongoose = require('mongoose');
 var u = require('../utils');
 
-var funcionarioSchema = new mongoose.Schema({
+var Schema = mongoose.Schema;
+
+var funcionarioSchema = new Schema({
     nome: String,
     cpf: { type: String, unique: true },
     endereco: String,
@@ -14,7 +16,11 @@ var funcionarioSchema = new mongoose.Schema({
     dtDemissao: Date,
     obs: String,
     email: String,
-    foto: String
+    foto: String,
+    ocorrencias: [{ 
+	type: Schema.Types.ObjectId, 
+	ref: 'Ocorrencia' 
+    }]
 });
 
 var F = mongoose.model('Funcionario', funcionarioSchema);
