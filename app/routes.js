@@ -78,11 +78,13 @@ module.exports = function(app,
 			res.json(new Erro('ERR_LSMDR'));
 			return;
 		    } 
-		    res.json({
-			sucesso: true,
-			msg: 'Listagem realizada com sucesso.',
-			moradores: moradores
-		    });			    
+		    setTimeout(function() {
+			res.json({
+			    sucesso: true,
+			    msg: 'Listagem realizada com sucesso.',
+			    moradores: moradores
+			});			    
+		    }, 3333);//delay para teste de animação na página
 		});
 	    });
 	});
