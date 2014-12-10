@@ -721,7 +721,7 @@ module.exports = function(app,
 	    // autenticação
 	    autenticar(req, res, null, function() {
 		Ocorrencia.find()
-		    .sort({ nome: 1 })
+		    .sort({ abridor: 1 })
 		    .populate('_funcionario', 'nome')
 		    .exec(function(err, ocorrencias) { 
 			if(err) {
